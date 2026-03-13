@@ -19,7 +19,7 @@ Create Kyndlo events from campaign tasks end-to-end. Claims tasks, researches ve
 - **campaign-name** (required): The campaign to pull tasks from (e.g. `colorado-2027`)
 - **batch-size** (optional, default 1): Number of tasks to process in this run
 
-When running autonomously, identify yourself as `openclaw-<campaign-name>` (e.g. `openclaw-colorado-2027`).
+When running autonomously, identify yourself using the agent name only in `--name` (for example `Sugar`), not a campaign-specific combination.
 
 ---
 
@@ -103,8 +103,10 @@ Repeat for each task up to the batch size. Track progress as `[Task X/N]`.
 ### Step 1: Claim a task
 
 ```bash
-gokyn task next --campaign <campaign> --assign --name "openclaw-<campaign>" --json
+gokyn task next --campaign <campaign> --assign --name "<agent-name>" --json
 ```
+
+Use the agent name only for `--name` (for example `Sugar`). Do NOT combine the agent name with the campaign.
 
 Do NOT pass `--priority` — the server automatically returns tasks in priority order (high first, then medium, then low). This is simpler and more reliable than cascading through priorities manually.
 
