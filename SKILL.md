@@ -43,7 +43,7 @@ Before entering the task loop, run these checks in order. Stop if any fail.
    ```bash
    gokyn task rules
    ```
-   Read the full markdown output and internalize every rule. These rules govern venue selection, event data formatting, image requirements, and quality standards. **Follow every rule strictly during event creation.** Rules are maintained in the database and may change between runs — always fetch fresh.
+   Read the full markdown output and internalize every rule. These rules govern venue selection, event data formatting, image requirements, and quality standards. **Follow every rule strictly before and during event creation attempts. Do not attempt to create an event until you have fetched and understood the current `gokyn task rules`.** Rules are maintained in the database and may change between runs — always fetch fresh.
 
 4. **Report status** to the user: campaign name, progress percentage, tasks remaining, and confirm rules loaded.
 
@@ -157,6 +157,8 @@ Check for `regularOpeningHours.weekdayDescriptions` in the response. A venue **p
 - At least one day is NOT "Closed"
 
 Use the first venue that passes. If no venue passes the hours gate, skip the task with reason "No venues with published hours for <category> in <county> County".
+
+Follow the currently fetched `gokyn task rules` as the source of truth for how to handle missing hours data, venue qualification, and skip behavior. Do not invent fallback behavior that conflicts with the rules.
 
 ### Step 6: Gather venue data
 
