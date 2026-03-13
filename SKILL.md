@@ -102,16 +102,14 @@ Repeat for each task up to the batch size. Track progress as `[Task X/N]`.
 ### Step 1: Claim a task
 
 ```bash
-gokyn task next --campaign <campaign> --priority high --assign --name "openclaw-<campaign>" --json
+gokyn task next --campaign <campaign> --assign --name "openclaw-<campaign>" --json
 ```
 
-If no high-priority tasks are returned, cascade:
-```bash
-gokyn task next --campaign <campaign> --priority medium --assign --name "openclaw-<campaign>" --json
-```
-Then try `--priority low`. If no tasks at any priority, stop the loop.
+Do NOT pass `--priority` — the server automatically returns tasks in priority order (high first, then medium, then low). This is simpler and more reliable than cascading through priorities manually.
 
-Extract from the JSON response:
+If the response contains `"count": 0` (no tasks), stop the loop. If the response includes a `"diagnostic"` field, report it to the user — it indicates a server-side issue worth investigating.
+
+Extract from the JSON response (`tasks[0]`):
 - `taskId` — the `_id` field
 - `county` — the county name
 - `activityCategory` — the activity type
@@ -260,7 +258,7 @@ If the task was skipped, print:
 
 | Error | Recovery |
 |---|---|
-| No tasks returned at high priority | Try medium, then low. If none at any priority, stop the loop. |
+| No tasks returned (count: 0) | If `diagnostic` field present, report it to user. Otherwise stop the loop — campaign may be complete. |
 | No search results from goplaces | Try broader query (drop "County", use "near"). If still none, skip task. |
 | No venues pass hours gate | Skip task with reason "No venues with published hours". |
 | Activity ID not found | Try partial/shorter search terms. If still not found, skip task. |

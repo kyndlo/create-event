@@ -106,17 +106,17 @@ gokyn task rules
 
 This means rules can be updated in the database without modifying the skill file. The agent always operates with the latest guidelines for venue selection, description writing, pricing, and quality standards.
 
-## Priority cascade
+## Priority ordering
 
 Tasks are organized into three priority tiers based on county population:
 
 | Priority | Meaning |
 |----------|---------|
-| `high` | High-population counties — process first |
+| `high` | High-population counties — processed first |
 | `medium` | Mid-population counties |
 | `low` | Low-population/rural counties |
 
-The agent tries high-priority tasks first. If none remain, it cascades to medium, then low. If no tasks exist at any priority, the loop stops.
+The server automatically returns tasks in priority order (high → medium → low). The agent does not need to filter by priority — it simply claims the next available task and the server handles ordering.
 
 ## Category mapping
 
