@@ -1,8 +1,9 @@
 ---
 name: create-event
-description: Autonomously create Kyndlo events from campaign tasks using gokyn CLI and goplaces for venue research. Usage: /create-event <campaign> [batch-size]
+description: "Autonomously create Kyndlo events from campaign tasks using gokyn CLI and goplaces for venue research. Usage: /create-event <campaign> [batch-size]"
 user-invocable: true
-metadata: {"openclaw":{"requires":{"bins":["gokyn","goplaces","curl"],"env":["KYNDLO_API_TOKEN","GOOGLE_PLACES_API_KEY"]},"primaryEnv":"KYNDLO_API_TOKEN","os":["darwin","linux"]}}
+metadata:
+  { "openclaw": { "requires": { "bins": ["gokyn", "goplaces", "curl"], "env": ["KYNDLO_API_TOKEN", "GOOGLE_PLACES_API_KEY"] }, "primaryEnv": "KYNDLO_API_TOKEN", "os": ["darwin", "linux"] } }
 ---
 
 # create-event — Autonomous Event Creator
