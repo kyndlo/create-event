@@ -1,6 +1,6 @@
 ---
 name: create-event
-description: "Autonomously create Kyndlo events from campaign tasks. Researches venues, creates events, uploads photos, and marks tasks complete. Usage: /create-event <campaign> [batch-size]"
+description: "Autonomously create Kyndlo events from campaign tasks for a specific city. Researches venues, creates events, uploads photos, and marks tasks complete. Usage: /create-event <campaign> <city>"
 user-invocable: true
 metadata:
   { "openclaw": { "requires": { "bins": ["gokyn", "curl"], "env": ["KYNDLO_API_TOKEN"] }, "primaryEnv": "KYNDLO_API_TOKEN", "os": ["darwin", "linux"] } }
@@ -13,12 +13,13 @@ Create Kyndlo events from campaign tasks end-to-end. Claims tasks, researches ve
 ## Invocation
 
 ```
-/create-event <campaign-name> [batch-size] [--city <city-name>]
+/create-event <campaign-name> <city-name>
 ```
 
 - **campaign-name** (required): The campaign to pull tasks from (e.g. `colorado-2027`)
-- **batch-size** (optional, default 1): Number of tasks to process in this run
-- **--city** (optional): Target a specific city (e.g. `Denver`, `Orlando`, `Rural`). When set, only tasks in counties belonging to that city are claimed.
+- **city-name** (required): The target city scope (e.g. `Denver`, `Orlando`, `Rural`). Only tasks in counties belonging to that city are claimed.
+
+Default behavior: once invoked, keep processing that city sequentially until there are no more eligible tasks, safe progress is blocked, or the user stops the run.
 
 When running autonomously, identify yourself using the agent name only in `--name` (for example `Sugar`), not a campaign-specific combination.
 
@@ -36,11 +37,9 @@ Before entering the task loop, run these checks in order. Stop if any fail.
 
 2. **Get campaign context:**
    ```bash
-   gokyn task context --campaign <campaign> --json
-   # If targeting a city:
    gokyn task context --campaign <campaign> --city <city> --json
    ```
-   Confirm the campaign exists. Report progress (counties done, tasks remaining) to the user. If a city was specified, report city-level progress.
+   Confirm the campaign exists. Report city-level progress (counties done, tasks remaining) to the user.
 
 3. **List available cities** (optional, useful for discovery):
    ```bash
@@ -54,7 +53,7 @@ Before entering the task loop, run these checks in order. Stop if any fail.
    ```
    Read the full markdown output and internalize every rule. These rules govern venue selection, event data formatting, image requirements, and quality standards. **Follow every rule strictly during event creation.** Rules are maintained in the database and may change between runs — always fetch fresh.
 
-5. **Report status** to the user: campaign name, city (if targeting), progress percentage, tasks remaining, and confirm rules loaded.
+5. **Report status** to the user: campaign name, city, progress percentage, tasks remaining, and confirm rules loaded.
 
 ---
 
@@ -147,15 +146,13 @@ Search for **up to 5 candidates** and use the first one that passes the hours ga
 
 ## The Autonomous Loop
 
-Repeat for each task up to the batch size. Track progress as `[Task X/N]`.
+Repeat sequentially for the requested city until there are no more eligible tasks, safe progress is blocked, or the user asks you to stop. Track progress as `[Task X]`.
 
 **Important:** If the loop exits early for any reason, run the Cleanup step to release any uncompleted tasks.
 
 ### Step 1: Claim a task
 
 ```bash
-gokyn task next --campaign <campaign> --assign --name "<agent-name>" --json
-# If targeting a city:
 gokyn task next --campaign <campaign> --city <city> --assign --name "<agent-name>" --json
 ```
 
@@ -163,7 +160,7 @@ Use the agent name only for `--name` (for example `Sugar`). Do NOT combine the a
 
 Do NOT pass `--priority` — the server automatically returns tasks in priority order (high first, then medium, then low). This is simpler and more reliable than cascading through priorities manually.
 
-When `--city` is set, only tasks whose `cities` array includes that city name are returned. This lets agents focus on a metro area (e.g. `Denver`) or all rural counties (`Rural`).
+Because this skill is city-scoped by default, only tasks whose `cities` array includes that city name should be claimed. This lets agents focus on a metro area (e.g. `Denver`) or all rural counties (`Rural`).
 
 If the response contains `"count": 0` (no tasks), stop the loop. If the response includes a `"diagnostic"` field, report it to the user — it indicates a server-side issue worth investigating.
 
@@ -318,7 +315,7 @@ After all tasks are processed (or the loop ends early), print a summary:
 ```
 === Create-Event Summary ===
 Campaign:   <campaign-name>
-City:       <city-name or "all">
+City:       <city-name>
 Processed:  <total> tasks
 Created:    <count>
 Skipped:    <count>
