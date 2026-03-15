@@ -149,6 +149,8 @@ Search for **up to 5 candidates** and use the first one that passes the hours ga
 
 Repeat for each task up to the batch size. Track progress as `[Task X/N]`.
 
+**Important:** If the loop exits early for any reason, run the Cleanup step to release any uncompleted tasks.
+
 ### Step 1: Claim a task
 
 ```bash
@@ -284,9 +286,28 @@ If the task was skipped, print:
 | No venues found | Try broader search terms (drop "County", use nearby areas). If still none, skip task. |
 | No venues with determinable hours | Skip task with reason "No venues with published hours". |
 | Activity ID not found | Try partial/shorter search terms. If still not found, skip task. |
-| Event creation fails | Log the error. Do NOT mark task complete. Continue to next task. |
+| Event creation fails | Log the error. Release the task: `gokyn task release <taskId>`. Continue to next task. |
 | Photo download/upload fails | Continue without photo. Still complete the task. |
-| gokyn task complete fails | Log the error. Report the event ID so it can be linked manually. |
+| gokyn task complete fails | Log the error. Release the task: `gokyn task release <taskId>`. Report the event ID so it can be linked manually. |
+| Agent interrupted or unexpected error | Any claimed task not yet completed must be released. See Cleanup section. |
+
+---
+
+## Cleanup
+
+Before exiting — whether normally after the loop or due to an error — release any task that was claimed but not completed or skipped. This prevents tasks from being stuck in `in_progress` indefinitely.
+
+For each claimed task that was NOT completed or skipped:
+```bash
+gokyn task release <taskId>
+```
+
+**Rule:** A task must NEVER be left in `in_progress` status when the agent exits. Every claimed task must end in one of three states:
+- **completed** — event was created successfully
+- **skipped** — no viable venue or unrecoverable error (task won't be retried)
+- **released** (back to pending) — temporary failure, another agent can retry later
+
+Use `skip` for permanent failures (no venues exist, category not found). Use `release` for transient failures (API timeout, event creation error, network issue).
 
 ---
 
