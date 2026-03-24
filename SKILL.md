@@ -19,6 +19,8 @@ Create Kyndlo events from campaign tasks end-to-end. Claims tasks, researches ve
 - **campaign-name** (required): The campaign to pull tasks from (e.g. `colorado-2027`)
 - **city-name** (required): The target city scope (e.g. `Denver`, `Orlando`, `Rural`). Only tasks in counties belonging to that city are claimed.
 
+**If the user specifies a county instead of a city** (e.g. "focus on Orange County"), you must resolve it to a city first. Run `gokyn task cities --state <state>` and find which city contains that county. For example, Orange County FL belongs to the **Orlando** metro area, so use `Orlando` as the city-name.
+
 Default behavior: once invoked, keep processing that city sequentially until there are no more eligible tasks, safe progress is blocked, or the user stops the run.
 
 When running autonomously, identify yourself using the agent name only in `--name` (for example `Sugar`), not a campaign-specific combination.
@@ -35,17 +37,20 @@ Before entering the task loop, run these checks in order. Stop if any fail.
    ```
    Confirm the token is valid and has the required permissions.
 
-2. **Get campaign context:**
+2. **Resolve the city scope:**
+   ```bash
+   gokyn task cities --state <state>
+   ```
+   This shows all cities with their constituent counties and populations. Use this to:
+   - **If the user gave a city name:** confirm it exists in the list.
+   - **If the user gave a county name:** find which city contains that county and use the city name going forward. If the county is in the `Rural` bucket, use `Rural`.
+   - **If the user gave neither:** pick a city to target based on pending work.
+
+3. **Get campaign context:**
    ```bash
    gokyn task context --campaign <campaign> --city <city> --json
    ```
    Confirm the campaign exists. Report city-level progress (counties done, tasks remaining) to the user.
-
-3. **List available cities** (optional, useful for discovery):
-   ```bash
-   gokyn task cities --state <state>
-   ```
-   Shows all cities in the state with their constituent counties and populations. Use this to decide which city to target.
 
 4. **Fetch event creation rules:**
    ```bash
@@ -53,7 +58,7 @@ Before entering the task loop, run these checks in order. Stop if any fail.
    ```
    Read the full markdown output and internalize every rule. These rules govern venue selection, event data formatting, image requirements, and quality standards. **Follow every rule strictly during event creation.** Rules are maintained in the database and may change between runs — always fetch fresh.
 
-5. **Report status** to the user: campaign name, city, progress percentage, tasks remaining, and confirm rules loaded.
+5. **Report status** to the user: campaign name, resolved city, progress percentage, tasks remaining, and confirm rules loaded.
 
 ---
 
